@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/resources/bootstrap-3.3.7/css/bootstrap.min.css">
+    <script  src="/resources/bootstrap-3.3.7/js/jquery-3.3.1.min.js"></script>
+    <script  src="/resources/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script  src="/resources/vue/js/vue.min.js"></script>
+    <script src="/resources/bootstrap-3.3.7/js/jquery.cookie.js"></script>
+    <script src="/resources/js/cookie.js"></script>
+    <script src="/resources/js/apiUrl.js"></script>
+    <title>借书管理</title>
+</head>
+<body>
+<div id="app">
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="javascript:;">借书管理</a>     
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/book/borrow">首页</a>
+                        </li>
+                        <li><a href="/book/return">还书业务</a></li>
+                        <!-- <li class="dropdown">
+                            <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">借书管理
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="javascript:;" @click="borrowbookByAdmin">办理借书</a></li>
+                            </ul>
+                        </li> -->
+                        <li>
+                        <a href="/book/list">
+                                <span class="glyphicon glyphicon-log-in"></span>&nbsp;图书管理
+                            </a>
+                        </li>
+                        <li>
+                        <a href="/user/list">
+                            <span class="glyphicon glyphicon-log-in"></span>&nbsp;用户管理
+                        </a>
+                    </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="javascript:;" id="login">欢迎您</a></li>
+                        <li><a href="javascript:;" id="logout" @click="logout">注销</a></li>
+                    </ul>
+                </div>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-4" style="float:none; display:block; margin-left:auto; margin-right:auto;">
+            <div class="input-group">
+                <input type="text" name="user_name" id="user_name" class="form-control" placeholder="请输入用户名">
+                <span class="input-group-addon" @click="getBorrowinfosByUser()">
+                    <i class="glyphicon glyphicon-search"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="row">  &nbsp;</div>
+    <div class="container">
+        <table class="table table-bordered table-hover">
+            <tr>
+                <th>借书编号</th>
+                <th>书籍名称</th>
+                <th>书籍作者</th>
+                <th>出版社</th>
+                <th>价格</th>
+                <th>借书人</th>
+                <th>借书时间</th>
+                <th>办理者</th>
+                <th>操作</th>
+            </tr>
+            <tr v-for="borrowinfo in borrowinfos">
+                <td>{{borrowinfo.borrow_id}}</td>
+                <td>{{borrowinfo.book_name}}</td>
+                <td>{{borrowinfo.book_author}}</td>
+                <td>{{borrowinfo.book_press}}</td>
+                <td>{{borrowinfo.book_price}}</td>
+                <td>{{borrowinfo.borrow_user}}</td>
+                <td>{{borrowinfo.borrow_date}}</td>
+                <td>{{borrowinfo.operator}}</td>
+                <td width="10%">
+                    <a href="javascript:;" @click="returnbookByAdmin(borrowinfo.borrow_id, borrowinfo.borrow_user)">还书</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<script>
+    var data = {
+        borrowinfos:[
+            {borrow_id:1, book_name:'test', book_author:'test', book_press:'zz', book_price:33, borrow_user:'zz', borrow_date:'zz', operator:'admin'}
+        ],
+        borrow:{borrow_id:1, book_name:'test', book_author:'test', book_press:'zz', book_price:33, borrow_user:'zz', borrow_date:'zz', operator:'admin'},
+    };
+    new Vue({
+        el: '#app',
+        data: data,
+        mounted: function(){
+            this.getBorrowinfos();
+        },
+        methods:{
+            //获取所有借书情况
+            getBorrowinfos: function(){
+                var that = this;
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "borrow/list",
+                    dataType: "json",
+                    success: function(data){
+                        $('#login').html($('#login').html() + '，' + Vue.prototype.getCookie('admin_name'));
+                        that.borrowinfos = [];
+                        for(let index in data){
+                            that.borrow = {};
+                            that.borrow.borrow_id = data[index].borrow_id;
+                            that.borrow.book_name = data[index].borrow_book.book_name;
+                            that.borrow.book_author = data[index].borrow_book.book_author;
+                            that.borrow.book_press = data[index].borrow_book.book_press;
+                            that.borrow.book_price = data[index].borrow_book.book_price;
+                            that.borrow.borrow_user = data[index].borrow_user;
+                            that.borrow.borrow_date = data[index].borrow_date;
+                            that.borrow.operator = data[index].operator;
+                            that.borrowinfos.push(that.borrow);
+                        }
+                    },
+                });
+            },
+            //搜索用户借书情况
+            getBorrowinfosByUser: function(){
+                var user_name = $('#user_name').val();
+                var that = this;
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "borrow/queryByUser",
+                    data: {user_name: user_name},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.length == 0){
+                            alert("此用户无借书！");
+                        }else {
+                            that.borrowinfos = [];
+                            for(let index in data){
+                                that.borrow = {};
+                                that.borrow.borrow_id = data[index].borrow_id;
+                                that.borrow.book_name = data[index].borrow_book.book_name;
+                                that.borrow.book_author = data[index].borrow_book.book_author;
+                                that.borrow.book_press = data[index].borrow_book.book_press;
+                                that.borrow.book_price = data[index].borrow_book.book_price;
+                                that.borrow.borrow_user = data[index].borrow_user;
+                                that.borrow.borrow_date = data[index].borrow_date;
+                                that.borrow.operator = data[index].operator;
+                                that.borrowinfos.push(that.borrow);
+                            }
+                        }
+                    }
+                });
+            },
+            returnbookByAdmin: function(borrow_id, borrow_user){
+                var that = this;
+                var admin_name = Vue.prototype.getCookie('admin_name');
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "return/adminReturn",
+                    data: {
+                        borrow_id: borrow_id,
+                        borrow_user: borrow_user,
+                        admin_name: admin_name
+                    },
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            location.reload();
+                        }else {
+                            alert(data.msg);
+                        }
+                    }
+                });
+            },
+            logout: function(){
+               var that = this;
+               var admin_name = Vue.prototype.getCookie('admin_name');
+               $.ajax({
+                    type: "post",
+                    url: apiUrl + "admin/logout",
+                    data: {admin_name: admin_name},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            Vue.prototype.delCookie('admin_name');
+                            window.location.href = "/adminlogin";
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+               });
+           }
+        }
+    });
+</script>
+</body>
+</html>

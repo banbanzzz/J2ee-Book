@@ -1,0 +1,4 @@
+rootProject.name = 'book'
+
+include 'book-app'
+include 'book-server'

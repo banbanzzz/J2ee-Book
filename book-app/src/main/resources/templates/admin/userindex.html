@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="../../static/resources/css/style.css"> -->
+    <link rel="stylesheet" href="/resources/bootstrap-3.3.7/css/bootstrap.min.css">
+    <script  src="/resources/bootstrap-3.3.7/js/jquery-3.3.1.min.js"></script>
+    <script  src="/resources/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script  src="/resources/vue/js/vue.min.js"></script>
+    <script src="/resources/bootstrap-3.3.7/js/jquery.cookie.js"></script>
+    <script src="/resources/js/cookie.js"></script>
+    <script src="/resources/js/apiUrl.js"></script>
+    <title>用户管理</title>
+</head>
+<body>
+<div id="app">
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="javascript:;">用户管理</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active">
+                        <a href="/user/list">首页</a>
+                    </li>
+                    <li><a href="/book/borrow">借书业务</a></li>
+                    <li><a href="javascript:;">还书业务</a></li>
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">用户管理
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="javascript:;" @click="editPwd">修改密码</a></li>
+                            <li><a href="javascript:;" @click="edit">添加用户</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/book/list">
+                        <span class="glyphicon glyphicon-log-in"></span>&nbsp;图书管理
+                    </a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="javascript:;" id="login">欢迎您</a></li>
+                    <li><a href="javascript:;" id="logout" @click="logout">注销</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <table class="table table-bordered table-hover">
+            <tr>
+                <th>用户编号</th>
+                <th>用户名</th>
+                <th>用户密码</th>
+                <th>联系方式</th>
+                <th>可借书量</th>
+                <th>用户状态</th>
+                <th>操作</th>
+            </tr>
+            <tr v-for="userinfo in userinfos">
+                <td>{{userinfo.user_id}}</td>
+                <td width="15%">{{userinfo.user_name}}</td>
+                <td id="display">{{userinfo.user_hide}}</td>
+                <td>{{userinfo.user_tel}}</td>
+                <td>{{userinfo.user_num}}</td>
+                <!-- 1正常 0停用 -->
+                <td>{{userinfo.user_status}}</td>  
+                <td width="15%">
+                    <a href="javascript:;" @click="editstate(userinfo.user_status, userinfo.user_id)">{{userinfo.operate}}</a>
+                    <a style="margin-left: 30px" href="javascript:;" @click="edit(userinfo)">修改</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="modal fade" id="edit" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">用户信息</h4>
+                </div>
+                <div class="modal-body">
+                    <label>用户名</label>
+                    <input type="text" id="user_name" class="form-control" placeholder="请输入用户名" v-model="user.user_name">
+                    <label>密码</label>
+                    <input type="password" id="user_pwd" class="form-control" placeholder="请输入密码" v-model="user.user_pwd">
+                    <label>联系方式</label>
+                    <input type="tel" id="user_tel" maxlength="11" class="form-control" placeholder="请输入联系方式" v-model="user.user_tel"> 
+                    <label>可借数量</label>
+                    <input type="number" id="user_num" class="form-control" placeholder="请输入可借数量" v-model="user.user_num">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @click="doedit">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editpwd" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">修改密码</h4>
+                    </div>
+                    <div class="modal-body">
+                        <label>原密码</label>
+                        <input type="text" id="admin_oldpwd" class="form-control" placeholder="请输入原密码">
+                        <label>新密码</label>
+                        <input type="password" id="admin_pwd1" class="form-control" placeholder="请输入新密码">
+                        <label>确认密码</label>
+                        <input type="password" id="admin_pwd2" class="form-control" placeholder="确定新密码">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" @click="updatePwd">确定</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+</div> 
+<script>
+    var data = {
+        userinfos:[
+            {user_id:1, user_name:'test', user_pwd:'test', user_tel:'12345676787', user_num:5, user_status:'zz', operate: 'zz', user_hide:'*'}
+        ], 
+        user:{user_id:0, user_name:'', user_pwd:'', user_tel:'', user_num:0, user_status:'', operate:''}
+    };
+    new Vue({
+        el: '#app',
+        data: data,
+        mounted: function(){
+            this.getUserinfos();
+        },
+        methods:{
+            //获取用户信息列表
+            getUserinfos: function(){
+                var that = this;
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "user/list",
+                    dataType: 'json',
+                    success:function(data){
+                        $('#login').html($('#login').html() + '，' + Vue.prototype.getCookie('admin_name'));
+                        //$('#login').html($('#login').html()+','+$.cookie('admin_name')); 
+                        that.userinfos = [];
+                        for(let index in  data){
+                           // console.log(data[index].user_status);
+                            if(data[index].user_status == 1){
+                                data[index].user_status = '正常';
+                                data[index].operate = '注销';
+                            }else {
+                                data[index].user_status = '停用';
+                                data[index].operate = '激活';
+                            }
+                            data[index].user_hide = "********";
+                            that.userinfos.push(data[index]);
+                        }
+                    }
+                });
+            },
+            //添加用户 修改用户信息 vue的双向绑定 v-model
+            edit: function(obj){
+                $('#edit').modal('show');
+                this.user = obj;
+            },
+            doedit: function(){
+                if(this.user.user_id > 0){
+                    this.updateUser("edit");
+                }else {
+                    this.updateUser("add");
+                }
+            },
+            updateUser: function(actionName){
+                var that = this;
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "user/" + actionName,
+                    data: {
+                        user_id: that.user.user_id,
+                        user_name: that.user.user_name,
+                        user_pwd: that.user.user_pwd,
+                        user_tel: that.user.user_tel,
+                        user_num: that.user.user_num
+                    },
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            $('#edit').modal('hide');
+                            location.reload();
+                        }else {
+                            alert(data.msg);
+                        }
+                    }
+                });
+            },
+            editstate: function(user_status, user_id){
+                var that = this;
+                var actionName;
+                if(user_status == '正常'){
+                    actionName = "stop";
+                }else {
+                    actionName = "activate";
+                }
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "user/" + actionName,
+                    data: {user_id: user_id},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            location.reload();
+                        }else {
+                            alert(data.msg);
+                        }
+                    }
+                });
+            },
+            editPwd: function(){
+                $('#editpwd').modal('show');
+            },
+            updatePwd: function(){
+                var admin_pwd = $('#admin_oldpwd').val();
+               var admin_pwd1 = $('#admin_pwd1').val();
+               var admin_pwd2 = $('#admin_pwd2').val();
+               if(admin_pwd == null || admin_pwd1 == null || admin_pwd2 == null){
+                   alert("信息不能为空！");
+               }else{
+                   if(admin_pwd1 != admin_pwd2){
+                       alert("新密码出错！");
+                       return;
+                   }else {
+                       var admin_name = Vue.prototype.getCookie('admin_name');
+                        $.ajax({
+                            type: "post",
+                            url: apiUrl + "admin/editPwd",
+                            data: {
+                                admin_oldpwd: admin_pwd,
+                                admin_newpwd: admin_pwd1,
+                                admin_name: admin_name
+                            },
+                            dataType: "json",
+                            success: function(data){
+                                if(data.success){
+                                    alert(data.msg);
+                                    Vue.prototype.delCookie('admin_name');
+                                    window.location.href = "/adminlogin";
+                                }else {
+                                    alert(data.msg);
+                                }
+                            }
+                        });
+                   }
+               }
+            },
+            logout: function(){
+               var that = this;
+               var admin_name = Vue.prototype.getCookie('admin_name');
+               $.ajax({
+                    type: "post",
+                    url: apiUrl + "admin/logout",
+                    data: {admin_name: admin_name},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            Vue.prototype.delCookie('admin_name');
+                            window.location.href = "/adminlogin";
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+               });
+           }
+        }
+    });
+</script>
+</body>
+</html>

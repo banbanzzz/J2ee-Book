@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/resources/bootstrap-3.3.7/css/bootstrap.min.css">
+    <script  src="/resources/bootstrap-3.3.7/js/jquery-3.3.1.min.js"></script>
+    <script  src="/resources/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script  src="/resources/vue/js/vue.min.js"></script>
+    <script src="/resources/bootstrap-3.3.7/js/jquery.cookie.js"></script>
+    <script src="/resources/js/cookie.js"></script>
+    <script src="/resources/js/apiUrl.js"></script>
+    <title>还书记录</title>
+</head>
+<body>
+<div id="app">
+    <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="javascript:;">借书管理</a>     
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/book/return">首页</a>
+                        </li>
+                        <li><a href="/book/borrow">借书业务</a></li>
+                        <!-- <li class="dropdown">
+                            <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">借书管理
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="javascript:;" @click="">办理借书</a></li>
+                            </ul>
+                        </li> -->
+                        <li>
+                        <a href="/book/list">
+                                <span class="glyphicon glyphicon-log-in"></span>&nbsp;图书管理
+                            </a>
+                        </li>
+                        <li>
+                        <a href="/user/list">
+                            <span class="glyphicon glyphicon-log-in"></span>&nbsp;用户管理
+                        </a>
+                    </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="javascript:;" id="login">欢迎您</a></li>
+                        <li><a href="javascript:;" id="logout" @click="logout">注销</a></li>
+                    </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-4" style="float:none; display:block; margin-left:auto; margin-right:auto;">
+            <div class="input-group">
+                <input type="text" name="user_name" id="user_name" class="form-control" placeholder="请输入用户名">
+                <span class="input-group-addon" @click="getReturnfosByUser()">
+                    <i class="glyphicon glyphicon-search"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="row">  &nbsp;</div>
+    <div class="container">
+        <table class="table table-bordered table-hover">
+            <tr>
+                <th>编号</th>
+                <th>书籍名称</th>
+                <th>书籍作者</th>
+                <th>出版社</th>
+                <th>价格</th>
+                <th>还书人</th>
+                <th>借书时间</th>
+                <th>还书时间</th>
+                <th>办理者</th>
+            </tr>
+            <tr v-for="returninfo in returninfos">
+                <td>{{returninfo.return_id}}</td>
+                <td>{{returninfo.book_name}}</td>
+                <td>{{returninfo.book_author}}</td>
+                <td>{{returninfo.book_press}}</td>
+                <td>{{returninfo.book_price}}</td>
+                <td>{{returninfo.return_user}}</td>
+                <td>{{returninfo.borrow_date}}</td>
+                <td>{{returninfo.return_date}}</td>
+                <td>{{returninfo.operator}}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+<script>
+    var data = {
+        returninfos:[
+            {return_id:1, book_name:'test', book_author:'test', book_press:'zz', book_price:33, borrow_date:'', return_user:'zz', return_date:'zz', operator:'admin'}
+        ],
+    };
+    new Vue({
+        el: '#app',
+        data: data,
+        mounted: function(){
+            this.getReturninfos();
+        },
+        methods: {
+            getReturninfos: function(){
+                var that = this;
+                var user_name = Vue.prototype.getCookie('admin_name');
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "return/list",
+                    dataType: "json",
+                    success: function(data){
+                        $('#login').html($('#login').html() + '，' + Vue.prototype.getCookie('admin_name'));
+                        that.returninfos = [];
+                        for(let index in data){
+                            that.return = {};
+                            that.return.return_id = data[index].return_id;
+                            that.return.book_name = data[index].return_book.book_name;
+                            that.return.book_author = data[index].return_book.book_author;
+                            that.return.book_press = data[index].return_book.book_press;
+                            that.return.book_price = data[index].return_book.book_price;
+                            that.return.return_user = data[index].return_user;
+                            that.return.borrow_date = data[index].borrow_date;
+                            that.return.return_date = data[index].return_date;
+                            that.return.operator = data[index].operator;
+                            that.returninfos.push(that.return);
+                        }
+                    }
+                });
+            },
+            getReturnfosByUser: function(){
+                var that = this;
+                var user_name = $('#user_name').val();
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "return/queryByUser",
+                    data: {user_name: user_name},
+                    dataType: "json",
+                    success: function(data){
+                        that.returninfos = [];
+                        for(let index in data){
+                            that.return = {};
+                            that.return.return_id = data[index].return_id;
+                            that.return.book_name = data[index].return_book.book_name;
+                            that.return.book_author = data[index].return_book.book_author;
+                            that.return.book_press = data[index].return_book.book_press;
+                            that.return.book_price = data[index].return_book.book_price;
+                            that.return.return_user = data[index].return_user;
+                            that.return.borrow_date = data[index].borrow_date;
+                            that.return.return_date = data[index].return_date;
+                            that.return.operator = data[index].operator;
+                            that.returninfos.push(that.return);
+                        }
+                    }
+                });
+            },
+            logout: function(){
+               var that = this;
+                var admin_name = Vue.prototype.getCookie('admin_name');
+               $.ajax({
+                    type: "post",
+                    url: apiUrl + "admin/logout",
+                    data: {admin_name: admin_name},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            Vue.prototype.delCookie('admin_name');
+                            window.location.href = "/adminlogin";
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+               });
+           }
+        }
+    });
+</script>
+</body>
+</html>

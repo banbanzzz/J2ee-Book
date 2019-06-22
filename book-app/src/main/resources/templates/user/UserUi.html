@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/resources/bootstrap-3.3.7/css/bootstrap.min.css">
+    <script  src="/resources/bootstrap-3.3.7/js/jquery-3.3.1.min.js"></script>
+    <script  src="/resources/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script  src="/resources/vue/js/vue.min.js"></script>
+    <script src="/resources/bootstrap-3.3.7/js/jquery.cookie.js"></script>
+    <script src="/resources/js/cookie.js"></script>
+    <script src="/resources/js/apiUrl.js"></script>
+    <title>图书馆</title>
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar navbar-default">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="javascript:;">网上图书馆</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="/user/booklist">首页</a>
+                        </li>
+                        <li><a href="/user/borrowlist">个人借书</a></li>
+                        <li><a href="/user/returnlist">还书业务</a></li>
+                        <li class="dropdown">
+                            <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">信息修改
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="javascript:;" @click="getUserinfo">个人信息</a></li>
+                                <li><a href="javascript:;" @click="edit">修改密码</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="javascript:;" id="login">欢迎您</a></li>
+                        <li><a href="javascript:;" id="logout" @click="logout">注销</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="row">
+             <div class="col-md-4" style="float:none; display:block; margin-left:auto; margin-right:auto;">
+                <div class="input-group">
+                    <input type="text" name="book_name" id="bookname" class="form-control" placeholder="请输入书籍">
+                    <span class="input-group-addon" @click="getBookinfosByName(bookname)">
+                        <i class="glyphicon glyphicon-search"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="row">  &nbsp;</div>
+        <div class="container">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>书籍编号</th>
+                    <th>书籍名称</th>
+                    <th>书籍作者</th>
+                    <th>出版社</th>
+                    <th>价格</th>
+                    <th>馆存</th>
+                    <th>操作</th>
+                </tr>
+                <tr v-for="bookinfo in bookinfos">
+                    <td>{{bookinfo.book_id}}</td>
+                    <td>{{bookinfo.book_name}}</td>
+                    <td>{{bookinfo.book_author}}</td>
+                    <td>{{bookinfo.book_press}}</td>
+                    <td>{{bookinfo.book_price}}</td>
+                    <td>{{bookinfo.book_num}}</td>
+                    <td width="10%">
+                        <a href="javascript:;" @click="borrow(bookinfo.book_id)">借书</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    
+        <div class="modal fade" id="userinfo" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">个人信息</h4>
+                    </div>
+                    <div class="modal-body">
+                        <label>用户名</label>
+                        <input type="text" id="user_name" class="form-control" placeholder="请输入用户名" readonly="readonly" v-model="userinfo.user_name">
+                        <label>密码</label>
+                        <input type="password" id="user_pwd" class="form-control" placeholder="请输入密码" readonly="readonly" v-model="userinfo.user_pwd">
+                        <label>账号状态</label>
+                        <input type="text" id="user_status" class="form-control" readonly="readonly" v-model="userinfo.user_status">
+                        <label>联系方式</label>
+                        <input type="tel" id="user_tel" maxlength="11" class="form-control" placeholder="请输入联系方式" readonly="readonly" v-model="userinfo.user_tel"> 
+                        <label>可借数量</label>
+                        <input type="number" id="user_num" class="form-control" placeholder="请输入可借数量" readonly="readonly" v-model="userinfo.user_num">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="edit" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">修改密码</h4>
+                    </div>
+                    <div class="modal-body">
+                        <label>原密码</label>
+                        <input type="text" id="user_oldpwd" class="form-control" placeholder="请输入原密码">
+                        <label>新密码</label>
+                        <input type="password" id="user_pwd1" class="form-control" placeholder="请输入新密码">
+                        <label>确认密码</label>
+                        <input type="password" id="user_pwd2" class="form-control" placeholder="确定新密码">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" @click="updatePwd">确定</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+<script>
+    var data = {
+        bookinfos:[
+            {book_id:1, book_name:'test', book_author:'test', book_press:'zz', book_price:33.00, book_num:0, book_status:'zz', operate:'zz'}
+        ],
+        userinfo:{user_id:1, user_name:'', user_pwd:'', user_status:1, user_num:0, user_tel:''}
+    }
+    new Vue({
+        el: '#app',
+        data: data,
+        mounted: function(){
+            this.getBookinfos();
+        },
+        methods:{
+            getBookinfos: function(){
+                var that = this;
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "book/list",
+                    dataType: "json",
+                    success: function(data){
+                        $('#login').html($('#login').html() + '，' + Vue.prototype.getCookie('name'));
+
+                        that.bookinfos = [];
+                        for(let index in data){
+                            that.bookinfos.push(data[index]);
+                        }
+                    }
+                });
+            },
+            //通过名称搜索
+            getBookinfosByName: function(bookname){
+                var bookname = $('#bookname').val();
+                var that = this;
+                $.ajax({
+                    type: "post",
+                    url: apiUrl + "book/queryByName",
+                    data: {book_name: bookname},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.length == 0){
+                            alert("查无此书！");
+                        }else {
+                            that.bookinfos = [];
+                            for(let index in data){
+                                that.bookinfos.push(data[index]);
+                            }
+                        }
+                    }
+                });
+            },
+           getUserinfo: function(){
+               var username = Vue.prototype.getCookie('name');
+               console.log(username);
+               var that = this;
+               $.ajax({
+                   type: "post",
+                   url: apiUrl + "user/queryUserByName",
+                   data: {user_name: username},
+                   dataType: "json",
+                   success: function(data){
+                       that.userinfo = {};
+                       that.userinfo.user_id = data.user_id;
+                       that.userinfo.user_name = data.user_name;
+                       that.userinfo.user_pwd = data.user_pwd;
+                       that.userinfo.user_num = data.user_num;
+                       that.userinfo.user_tel = data.user_tel;
+                       if(data.user_status == 1){
+                           that.userinfo.user_status = "正常";
+                        }else {
+                            that.userinfo.user_status = "停用";
+                        }
+                       $('#userinfo').modal('show');
+                   }
+               });
+           },
+           edit: function(){
+               $('#edit').modal('show');
+           },
+           updatePwd: function(){
+               var user_pwd = $('#user_oldpwd').val();
+               var user_pwd1 = $('#user_pwd1').val();
+               var user_pwd2 = $('#user_pwd2').val();
+               if(user_pwd == null || user_pwd1 == null || user_pwd2 == null){
+                   alert("信息不能为空！");
+               }else{
+                   if(user_pwd1 != user_pwd2){
+                       alert("新密码出错！");
+                       return;
+                   }else {
+                       var user_name = Vue.prototype.getCookie('name');
+                        $.ajax({
+                            type: "post",
+                            url: apiUrl + "user/editPwd",
+                            data: {
+                                user_oldpwd: user_pwd,
+                                user_newpwd: user_pwd1,
+                                user_name: user_name
+                            },
+                            dataType: "json",
+                            success: function(data){
+                                if(data.success){
+                                    alert(data.msg);
+                                    Vue.prototype.delCookie('name');
+                                    window.location.href = "/login";
+                                }else {
+                                    alert(data.msg);
+                                }
+                            }
+                        });
+                   }
+               }
+           },
+           borrow: function(book_id){
+               var that = this;
+               var user_name = Vue.prototype.getCookie('name');
+               $.ajax({
+                    type: "post",
+                    url: apiUrl + "book/borrow",
+                    data: {
+                        book_id: book_id,
+                        user_name: user_name,
+                    },
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            location.reload();
+                        }else {
+                            alert(data.msg);
+                        }
+                    }
+               });
+           },
+           logout: function(){
+               var that = this;
+               var user_name = Vue.prototype.getCookie('name');
+               $.ajax({
+                    type: "post",
+                    url: apiUrl + "user/logout",
+                    data: {user_name : user_name},
+                    dataType: "json",
+                    success: function(data){
+                        if(data.success){
+                            alert(data.msg);
+                            Vue.prototype.delCookie('name');
+                            window.location.href = "/login";
+                        } else {
+                            alert(data.msg);
+                        }
+                    }
+               });
+           }
+        }
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>管理员登录</title>
+	<link rel="stylesheet" href="/resources/bootstrap-3.3.7/css/bootstrap.min.css" >
+	<link rel="stylesheet" href="/resources/css/style.css" />
+	<script src="/resources/bootstrap-3.3.7/js/jquery-3.3.1.min.js"></script>
+	<script src="/resources/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+	<script src="/resources/vue/js/vue.min.js"></script>
+	<script src="/resources/bootstrap-3.3.7/js/jquery.cookie.js"></script>
+	<!-- <script src="../static/resources/js/admin.js"></script> -->
+	 <script src="/resources/js/cookie.js"></script>
+	<script src="/resources/js/apiUrl.js"></script>
+</head>
+<body>
+<div id="adminlogin">
+	<div class="sucaihuo-container">
+		<div class="demo form-bg" style="padding: 20px 0;">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-offset-3 col-md-6">
+						<form class="form-horizontal">
+							<span class="heading">管理员登录
+								<a href="/login" class="btn btn-default btn-sm navbar-btn">
+									<span class="glyphicon glyphicon-log-in">&nbsp;用户</span>
+								</a>
+							</span>
+							<div class="form-group">
+								<span style="color:red;" id="msg"></span>
+							</div>
+							<div class="form-group">
+								<input type="text" class="form-control" name="admin_name" placeholder="请输入用户名" v-model="admin.admin_name">
+								<i class="glyphicon glyphicon-user"></i>
+							</div>
+							<div class="form-group help">
+								<input type="password" class="form-control" name="admin_pwd" placeholder="请输入密码" v-model="admin.admin_pwd">
+								<i class="glyphicon glyphicon-lock"></i>
+							</div>
+							<div class="form-group">
+								<div class="main-checkbox">
+									<input type="checkbox" value="None" id="checkbox1" name="check"/>
+									<label for="checkbox1"></label>
+								</div>
+								<span class="text">记住我</span>
+								<button type="button" class="btn btn-default"
+							    @click="dologin">登录</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+<script>
+	// import {setCookie, getCookie, delCookie} from './cookie.js';
+	//全局变量
+	//import cookiefun from './cookie.js'
+	// Vue.use(cookiefun);
+	// Vue.prototype.$cookie = {
+		// 	setCookie,
+		// 	getCookie,
+		// 	delCookie
+		// };
+		var data = {admin:{id:0, admin_name:'', admin_pwd:''}};
+		new Vue({
+			el: '#adminlogin',
+			data: data,
+			mounted: function(){
+				Vue.prototype.delCookie('admin_name');
+			},
+			methods:{
+				//处理登录
+				dologin:function(){
+					var that = this;
+					$.ajax({
+						type: "post",
+						url: apiUrl + "admin/login",
+						data:{
+							admin_name: that.admin.admin_name,
+							admin_pwd: that.admin.admin_pwd
+						},
+						dataType: "json",
+						success:function(data){
+							if(data.admin_name != null){
+								//$.cookie('admin_name',data.admin_name,{path:'/',expires:10});
+								Vue.prototype.setCookie('admin_name', data.admin_name, 3600);
+								window.location.href = "/user/list";
+							}else{
+								$('#msg').html("账号或密码错误");
+							}	
+						}
+					});
+				}
+		}
+	});
+</script>
+</html>
